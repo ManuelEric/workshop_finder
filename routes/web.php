@@ -18,6 +18,7 @@ $router->get('/', function () use ($router) {
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('user[/{user}]', ['uses' => 'UserController@get']);
-    $router->post('register', ['uses' => 'UserController@register']);
+    $router->get('user[/{user}]', ['middleware' => 'auth', 'uses' => 'UserController@get']);
+    $router->post('register', ['middleware' => 'auth', 'uses' => 'UserController@register']);
+    $router->post('login', ['uses' => 'UserController@login']);
 });
