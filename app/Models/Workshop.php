@@ -2,27 +2,39 @@
 
 namespace App\Models;
 
-use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Lumen\Auth\Authorizable;
 
-class User extends Model implements AuthenticatableContract, AuthorizableContract
+class Workshop extends Model implements AuthenticatableContract, AuthorizableContract
 {
     use Authenticatable, Authorizable, HasFactory;
 
-    protected $table = 'wf_users';
+    protected $table = 'wf_workshops';
+
     /**
-     * The attributes that are mass assignable.
+     * The attributes that should be visible in arrays.
      *
-     * @var string[]
+     * @var array
      */
     protected $fillable = [
-        'full_name', 
+        'name',
         'email',
         'phone_number',
+        'address',
+        'city',
+        'city_district',
+        'neighbourhood',
+        'suburb',
+        'postcode',
+        'latitude',
+        'longitude',
+        'opening_hours',
         'password',
         'token',
     ];
@@ -35,9 +47,4 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = [
         'password',
     ];
-
-    public function vehicles()
-    {
-        return $this->hasMany(Vehicle::class, 'user_id', 'id');
-    }
 }

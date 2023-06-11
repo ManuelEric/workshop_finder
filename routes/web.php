@@ -18,7 +18,33 @@ $router->get('/', function () use ($router) {
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('user[/{user}]', ['middleware' => 'auth', 'uses' => 'UserController@get']);
-    $router->post('register', ['middleware' => 'auth', 'uses' => 'UserController@register']);
+    
+    // Authentication for User
+    $router->post('register', ['uses' => 'UserController@register']);
     $router->post('login', ['uses' => 'UserController@login']);
+    
+    $router->group(['middleware' => 'auth'], function () use ($router) {
+        // User
+        $router->get('user[/{user}]', ['uses' => 'UserController@get']);
+        $router->put('user/{user}/edit/profile', ['uses' => 'UserController@update']);
+        
+        // Vehicle
+        $router->get('user/{user}/vehicle', ['uses' => 'VehicleController@get']);
+        $router->post('user/{user}/add/vehicle', ['uses' => 'VehicleController@store']);
+        $router->put('user/{user}/edit/vehicle/{vehicle}', ['uses' => 'VehicleController@update']);
+        $router->delete('user/{user}/remove/vehicle/{vehicle}', ['uses' => 'VehicleController@destroy']);
+    });
+
+    $router->group(['prefix' => 'ws'], function () use ($router) {
+        
+        // Authentication for Workshop
+        $router->post('register', ['uses' => 'WorkshopController@register']);
+        $router->post('login', ['uses' => 'WorkshopController@login']);
+
+        $router->group(['middleware' => 'auth'], function () use ($router) {
+            // Workshop
+            $router->put('shop/{shop}/edit/profile', ['uses' => 'WorkshopController@update']);
+        });
+    });
+
 });

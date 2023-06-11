@@ -2,23 +2,16 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Traits\RestfulTrait;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function get($user = null)
-    {
-        if ($user)
-            $users = User::find($user);
-        else
-            $users = User::all();
-        
-        return response()->json($users->count() > 0 ? $users : 'no data found');
+    use RestfulTrait;
 
-    }
-
+    // auth
     public function register(Request $request)
     {
         $validated = $this->validate($request, [
@@ -37,13 +30,12 @@ class UserController extends Controller
 
         } catch (Exception $e) {
 
-            return response()->json([
-                'error' => $e->getMessage(),
-            ]);
+            return $this->errorResponse($e->getMessage());
 
         }
 
-        return response()->json($user);
+        $message = 'Registration successful';
+        return $this->successResponse($message, $user);
     }
 
     public function login(Request $request)
@@ -58,12 +50,12 @@ class UserController extends Controller
 
         $user = User::where('email', $email)->first();
         if (!$user) {
-            return response()->json(['message' => 'Login failed'], 401);
+            return $this->errorResponse('Login failed', 401);
         }
 
         $isValidPassword = Hash::check($password, $user->password);
         if (!$isValidPassword) {
-            return response()->json(['message' => 'Login failed'], 401);
+            return $this->errorResponse('Login failed', 401);
         }
 
         $generateToken = bin2hex(random_bytes(40));
@@ -71,6 +63,60 @@ class UserController extends Controller
             'token' => $generateToken
         ]);
 
-        return response()->json($user);
+        $message = 'Login successful';
+        return $this->successResponse($message, $user);
+    }
+
+    // user
+    
+    public function get($user = null)
+    {
+        try {
+            
+            if ($user)
+                $users = User::find($user);
+            else
+                $users = User::all();
+
+        } catch (Exception $e) {
+
+            return $this->errorResponse($e->getMessage());
+
+        }
+
+        $message = isset($users) ? 'User data found' : 'No data found';
+        return $this->successResponse($message, $users);
+    }
+
+    public function update(Request $request)
+    {
+        $userId = $request->route('user');
+        $extended_validate = [];
+
+        if ($request->input('password')) {
+            $extended_validate = [
+                'password' => 'required|min:6|confirmed',
+            ];
+        }
+
+        $validated = $this->validate($request, [
+            'full_name' => 'required',
+            'email' => 'required|email|unique:wf_users,email,'.$userId,
+            'phone_number' => 'required|unique:wf_users,phone_number,'.$userId,
+        ] + $extended_validate);
+
+        if ($request->input('password')) {
+            $validated['password'] = Hash::make($validated['password']);
+        }
+
+        try {
+            $user = User::find($userId);
+            $user->update($validated);
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+
+        $message = 'Profile updated';
+        return $this->successResponse($message, $user);
     }
 }
