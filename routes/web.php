@@ -27,6 +27,9 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         // User
         $router->get('user[/{user}]', ['uses' => 'UserController@get']);
         $router->put('user/{user}/edit/profile', ['uses' => 'UserController@update']);
+        $router->post('user/{user}/find/workshops', ['uses' => 'UserController@find']);
+        // Booking
+        $router->post('book/workshop/{workshop}', ['uses' => 'BookingController@booking']);
         
         // Vehicle
         $router->get('user/{user}/vehicle', ['uses' => 'VehicleController@get']);
@@ -43,7 +46,14 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
         $router->group(['middleware' => 'auth'], function () use ($router) {
             // Workshop
+            $router->get('shop[/{shop}]', ['uses' => 'WorkshopController@get']);
             $router->put('shop/{shop}/edit/profile', ['uses' => 'WorkshopController@update']);
+
+            // Services
+            $router->get('shop/{shop}/services', ['uses' => 'ServiceController@get']);
+            $router->post('shop/{shop}/add/service', ['uses' => 'ServiceController@store']);
+            $router->put('shop/{shop}/edit/service/{service}', ['uses' => 'ServiceController@update']);
+            $router->delete('shop/{shop}/remove/service/{service}', ['uses' => 'ServiceController@destroy']);
         });
     });
 

@@ -47,4 +47,14 @@ class Workshop extends Model implements AuthenticatableContract, AuthorizableCon
     protected $hidden = [
         'password',
     ];
+
+    public function services()
+    {
+        return $this->hasMany(Services::class, 'workshop_id', 'id');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Booking::class, 'workshop_id', 'id');
+    }
 }

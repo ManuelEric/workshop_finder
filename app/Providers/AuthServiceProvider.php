@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Workshop;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,7 +35,11 @@ class AuthServiceProvider extends ServiceProvider
             $token = $request->header('token');
 
             if ($token) {
-                return User::where('token', $token)->first();
+                if ($request->is('api/ws/*')) {
+                    return Workshop::where('token', $token)->first();
+                } else {
+                    return User::where('token', $token)->first();
+                }
             }
         });
     }

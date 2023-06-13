@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\RestfulTrait;
 use App\Models\Vehicle;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class VehicleController extends Controller
 {
@@ -33,11 +34,8 @@ class VehicleController extends Controller
 
         $vehicleDetails = array_merge($validated + ['user_id' => $request->route('user')]);
         
-        try {
-            $vehicle = Vehicle::create($vehicleDetails);
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        if (!$vehicle = Vehicle::create($vehicleDetails))
+            return $this->errorResponse("Error trying to add new vehicle, please try again.", 400);
 
         $message = 'Vehicle successfully added';
         return $this->successResponse($message, $vehicle);
@@ -54,10 +52,10 @@ class VehicleController extends Controller
         ]);
 
         try {
-            $vehicle = Vehicle::find($vehicleId);
+            $vehicle = Vehicle::findOrFail($vehicleId);
             $vehicle->update($validated);
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse("Error trying to update vehicle, please try again.", 400);
         }
 
         $message = 'Vehicle successfully updated';
@@ -69,10 +67,10 @@ class VehicleController extends Controller
         $vehicleId = $request->route('vehicle');
         
         try {
-            $vehicle = Vehicle::find($vehicleId);
+            $vehicle = Vehicle::findOrFail($vehicleId);
             $vehicle->delete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse("Error trying to remove vehicle, please try again.", 400);
         }
 
         $message = 'Vehicle successfully removed';

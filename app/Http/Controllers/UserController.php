@@ -4,7 +4,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\RestfulTrait;
 use App\Models\User;
+use App\Models\Workshop;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -118,5 +120,56 @@ class UserController extends Controller
 
         $message = 'Profile updated';
         return $this->successResponse($message, $user);
+    }
+
+    public function getCurrentLocation($latitude, $longitude)
+    {
+        $endpoint = "https://nominatim.openstreetmap.org/reverse?lat=".$latitude."&lon=".$longitude."&format=json";
+        $client = new \GuzzleHttp\Client();
+
+        $response = $client->request('GET', $endpoint);
+        $content = $response->getBody();
+
+        return json_decode($content, true);
+    }
+
+    public function find(Request $request)
+    {
+        $latitude = $request->lat;
+        $longitude = $request->lon;
+
+        $response = $this->getCurrentLocation($latitude, $longitude);
+
+        $currentLocation = [
+            'lat' => $response['lat'],
+            'lon' => $response['lon'],
+            'neighbourhood' => $response['address']['neighbourhood'] ?? null,
+            'suburb' => $response['address']['suburb'] ?? null,
+            'city_district' => $response['address']['city_district'] ?? null,
+            'city' => $response['address']['city'],
+            'postcode' => $response['address']['postcode'],
+        ];
+
+        try {
+
+            $workshops = Workshop::
+                    where('city_districtd', 'like', '%'.$currentLocation['city_district'].'%')->
+                    where('suburb', 'like', '%'.$currentLocation['suburb'].'%')->
+                    where('neighbourhood', 'like', '%'.$currentLocation['neighbourhood'].'%')->
+                    get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return $this->errorResponse("Error trying to get workshops nearby, please try again.", 400);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse("Error trying to get workshops nearby, please try again.", 400);
+        }
+
+        if ($workshops->count() == 0) {
+            $message = "We cannot found any workshops nearby.";
+            return $this->successResponse($message, []);
+        }
+
+        $message = "There are workshops nearby can be found";
+
+        return $this->successResponse($message, $workshops);
     }
 }
