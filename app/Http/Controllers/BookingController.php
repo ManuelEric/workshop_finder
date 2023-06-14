@@ -100,8 +100,6 @@ class BookingController extends Controller
 
     public function upload(Request $request)
     {
-        App::make('files')->link(storage_path('app/public'), public_path('storage'));
-        return asset('payment/20230614_7LEXL82M4W_S5ydDh6map.jpg');
         $token = $request->header('token');
         $user = User::where('token', $token)->firstOrFail();
         $bookingCode = $request->route('booking');
