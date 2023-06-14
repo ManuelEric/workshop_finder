@@ -138,6 +138,8 @@ class UserController extends Controller
         $latitude = $request->lat;
         $longitude = $request->lon;
 
+        $service_type = $request->service_type ?? null;
+
         $response = $this->getCurrentLocation($latitude, $longitude);
 
         $currentLocation = [
@@ -151,12 +153,16 @@ class UserController extends Controller
         ];
 
         try {
-
             $workshops = Workshop::
-                    where('city_districtd', 'like', '%'.$currentLocation['city_district'].'%')->
+                    leftJoin('wf_workshop_services as service', 'service.workshop_id', '=', 'wf_workshops.id')->
+                    where('city_district', 'like', '%'.$currentLocation['city_district'].'%')->
                     where('suburb', 'like', '%'.$currentLocation['suburb'].'%')->
                     where('neighbourhood', 'like', '%'.$currentLocation['neighbourhood'].'%')->
+                    when($service_type !== null, function ($query) use ($service_type) {
+                        $query->where('service.service_type', 'like', '%'.$service_type.'%');
+                    })->
                     get();
+
         } catch (\Illuminate\Database\QueryException $e) {
             return $this->errorResponse("Error trying to get workshops nearby, please try again.", 400);
         } catch (ModelNotFoundException $e) {

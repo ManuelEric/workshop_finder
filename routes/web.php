@@ -17,6 +17,8 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
+$router->get('public/{image}', ['uses' => 'BookingController@view']);
+
 $router->group(['prefix' => 'api'], function () use ($router) {
     
     // Authentication for User
@@ -29,7 +31,10 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         $router->put('user/{user}/edit/profile', ['uses' => 'UserController@update']);
         $router->post('user/{user}/find/workshops', ['uses' => 'UserController@find']);
         // Booking
+        $router->get('book/history', ['uses' => 'BookingController@get']);
         $router->post('book/workshop/{workshop}', ['uses' => 'BookingController@booking']);
+        $router->post('book/{booking}/payment/confirm', ['uses' => 'BookingController@upload']);
+        $router->put('book/{booking}/cancel', ['uses' => 'BookingController@cancel']);
         
         // Vehicle
         $router->get('user/{user}/vehicle', ['uses' => 'VehicleController@get']);

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\User;
 use App\Models\Workshop;
 use App\Models\Vehicle;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class BookingController extends Controller
 {
@@ -29,10 +31,23 @@ class BookingController extends Controller
         return substr(str_shuffle(str_repeat(static::UNAMBIGUOUS_ALPHABET, $characters)), 0, $characters);
     }
 
+    public function get(Request $request)
+    {
+        $token = $request->header('token');
+        $user = User::where('token', $token)->firstOrFail();
+        if ($user->bookings()->count() == 0 ) {
+            $message = "You haven't booked before.";
+            return $this->successResponse($message, []);
+        }
+
+        $message = "Booked history found.";
+        return $this->successResponse($message, $user->bookings);
+    }
+
     public function booking(Request $request)
     {
         $token = $request->header('token');
-        $userId = User::where('token', $token)->first()->id;
+        $userId = User::where('token', $token)->firstOrFail()->id;
         $workshopId = $request->route('workshop');
         $vehicleId = $request->vehicle;
         $serviceId = $request->service;
@@ -81,5 +96,66 @@ class BookingController extends Controller
             
         $message = "Booking created successfully";
         return $this->successResponse($message, $booking);
+    }
+
+    public function upload(Request $request)
+    {
+        App::make('files')->link(storage_path('app/public'), public_path('storage'));
+        return asset('payment/20230614_7LEXL82M4W_S5ydDh6map.jpg');
+        $token = $request->header('token');
+        $user = User::where('token', $token)->firstOrFail();
+        $bookingCode = $request->route('booking');
+        $currentBooking = $user->bookings()->where('booking_code', $bookingCode)->firstOrFail();
+        $currentProofImg = $currentBooking->proof_of_payment;
+
+        $this->validate($request, [
+            'proof' => 'required|mimes:png,jpg',
+        ]);
+
+        $currentProofPath = storage_path('payment') .'/'.$currentProofImg;
+        if (file_exists($currentProofPath))
+            unlink($currentProofPath);
+
+        $uploadedProof = $request->file('proof');
+        $paymentDetail['proof_of_payment'] = date('Ymd').'_'.$bookingCode.'_'.Str::random(10).".".$uploadedProof->extension();
+
+        $uploadedProof->move(storage_path('app/public/payment'), $paymentDetail['proof_of_payment']);
+
+        try {
+            $currentBooking->proof_of_payment = $paymentDetail['proof_of_payment'];
+            $currentBooking->save();
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('Error trying to upload proof of payment, please try again.', 400);
+        }
+
+        $message = "Success upload proof of payment.";
+        return $this->successResponse($message, $currentBooking);
+    }
+
+    public function view(Request $request)
+    {
+        echo 'a';exit;  
+    }
+
+    public function cancel(Request $request)
+    {
+        $token = $request->header('token');
+        $user = User::where('token', $token)->firstOrFail();
+        $bookingCode = $request->route('booking');
+
+        $booking = Booking::where('booking_code', $bookingCode)->firstOrFail();
+
+        if (!$booking->exists())
+            return $this->errorResponse('The booking doesn\'t exist.', 400);
+
+        if (!$user->bookings()->where('booking_code', $bookingCode)->exists())
+            return $this->errorResponse('You don\'t have permission to cancel this booking.', 200);
+
+        if (!$booking->update(['status' => 4]))
+            return $this->errorResponse('Error trying to cancel the booking, please try again.', 400);
+
+        $message = "Your booking has been cancelled";
+        return $this->successResponse($message, $booking);
+        
     }
 }

@@ -18,7 +18,7 @@ class Booking extends Model
     protected $table = 'wf_bookings';
 
     protected $primaryKey = 'booking_code';
-    protected $incrementing = false;
+    public $incrementing = false;
 
     /**
      * The attributes that should be visible in arrays.
