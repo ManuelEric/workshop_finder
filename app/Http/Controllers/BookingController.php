@@ -67,9 +67,9 @@ class BookingController extends Controller
         $extended_rules = [];
         if ($service->service_type == "towing") {
             $extended_rules = [
-                'pickup_location' => 'required',
-                'pickup_latitude' => 'required',
-                'pickup_longitude' => 'required',
+                'pickup_location' => 'nullable',
+                'pickup_latitude' => 'nullable',
+                'pickup_longitude' => 'nullable',
             ];
         }
 
@@ -117,7 +117,7 @@ class BookingController extends Controller
         $uploadedProof = $request->file('proof');
         $paymentDetail['proof_of_payment'] = date('Ymd').'_'.$bookingCode.'_'.Str::random(10).".".$uploadedProof->extension();
 
-        $uploadedProof->move(base_path('public/payment'), $paymentDetail['proof_of_payment']);
+        // $uploadedProof->move(base_path('public/payment'), $paymentDetail['proof_of_payment']);
 
         try {
             $currentBooking->proof_of_payment = $paymentDetail['proof_of_payment'];

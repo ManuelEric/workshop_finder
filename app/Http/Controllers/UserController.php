@@ -135,8 +135,9 @@ class UserController extends Controller
 
     public function find(Request $request)
     {
-        $latitude = $request->lat;
-        $longitude = $request->lon;
+        $latitude = $request->lat ?? "-6.223677865370818";
+        $longitude = $request->lon ?? "106.84620569829171";
+
 
         $service_type = $request->service_type ?? null;
 
@@ -153,7 +154,7 @@ class UserController extends Controller
         ];
 
         try {
-            $workshops = Workshop::
+            $workshops = Workshop::with('services')->
                     leftJoin('wf_workshop_services as service', 'service.workshop_id', '=', 'wf_workshops.id')->
                     where('city_district', 'like', '%'.$currentLocation['city_district'].'%')->
                     // where('suburb', 'like', '%'.$currentLocation['suburb'].'%')->
