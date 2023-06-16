@@ -156,7 +156,7 @@ class UserController extends Controller
             $workshops = Workshop::
                     leftJoin('wf_workshop_services as service', 'service.workshop_id', '=', 'wf_workshops.id')->
                     where('city_district', 'like', '%'.$currentLocation['city_district'].'%')->
-                    where('suburb', 'like', '%'.$currentLocation['suburb'].'%')->
+                    // where('suburb', 'like', '%'.$currentLocation['suburb'].'%')->
                     where('neighbourhood', 'like', '%'.$currentLocation['neighbourhood'].'%')->
                     when($service_type !== null, function ($query) use ($service_type) {
                         $query->where('service.service_type', 'like', '%'.$service_type.'%');

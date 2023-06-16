@@ -110,14 +110,14 @@ class BookingController extends Controller
             'proof' => 'required|mimes:png,jpg',
         ]);
 
-        $currentProofPath = storage_path('payment') .'/'.$currentProofImg;
+        $currentProofPath = base_path('payment') .'/'.$currentProofImg;
         if (file_exists($currentProofPath))
             unlink($currentProofPath);
 
         $uploadedProof = $request->file('proof');
         $paymentDetail['proof_of_payment'] = date('Ymd').'_'.$bookingCode.'_'.Str::random(10).".".$uploadedProof->extension();
 
-        $uploadedProof->move(storage_path('app/public/payment'), $paymentDetail['proof_of_payment']);
+        $uploadedProof->move(base_path('public/payment'), $paymentDetail['proof_of_payment']);
 
         try {
             $currentBooking->proof_of_payment = $paymentDetail['proof_of_payment'];
@@ -132,7 +132,11 @@ class BookingController extends Controller
 
     public function view(Request $request)
     {
-        echo 'a';exit;  
+        $image = $request->route('image');
+        $exp = explode("_", $image);
+        $bookingCode = $exp[1];
+
+        return base_path('/').Booking::where('booking_code', $bookingCode)->first()->proof_of_payment;
     }
 
     public function cancel(Request $request)
