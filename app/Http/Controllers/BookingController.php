@@ -44,6 +44,21 @@ class BookingController extends Controller
         return $this->successResponse($message, $user->bookings);
     }
 
+    public function show(Request $request)
+    {
+        $bookingCode = $request->route('booking');
+        $token = $request->header('token');
+        $user = User::where('token', $token)->firstOrFail();
+        if ($user->bookings()->count() == 0 ) {
+            $message = "You haven't booked before.";
+            return $this->successResponse($message, []);
+        }
+
+        $show = Booking::with(['workshop', 'workshop.services'])->where('booking_code', $bookingCode)->first();
+        $message = "Booked history found.";
+        return $this->successResponse($message, $show);
+    }
+
     public function booking(Request $request)
     {
         $token = $request->header('token');
@@ -93,7 +108,13 @@ class BookingController extends Controller
 
         if (!$booking = Booking::create($bookingDetails))
             return $this->errorResponse('Error trying to create booking, please try again.', 500);
-            
+
+        $booking = Booking::withAndWhereHas('workshop', function ($subQuery) use ($serviceId) {
+            $subQuery->withAndWhereHas('services', function ($subQuery_2) use ($serviceId) {
+                $subQuery_2->where('id', $serviceId);
+            });
+        })->where('booking_code', $booking->booking_code)->first();
+
         $message = "Booking created successfully";
         return $this->successResponse($message, $booking);
     }

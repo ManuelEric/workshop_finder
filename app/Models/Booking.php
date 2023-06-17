@@ -40,6 +40,11 @@ class Booking extends Model
         'proof_of_payment',
     ];
 
+    public function scopeWithAndWhereHas($query, $relation, $constraint){
+        return $query->whereHas($relation, $constraint)
+                     ->with([$relation => $constraint]);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
