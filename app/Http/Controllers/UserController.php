@@ -154,14 +154,13 @@ class UserController extends Controller
         ];
 
         try {
-            $workshops = Workshop::with('services')->
-                    leftJoin('wf_workshop_services as service', 'service.workshop_id', '=', 'wf_workshops.id')->
-                    where('city_district', 'like', '%'.$currentLocation['city_district'].'%')->
-                    // where('suburb', 'like', '%'.$currentLocation['suburb'].'%')->
-                    where('neighbourhood', 'like', '%'.$currentLocation['neighbourhood'].'%')->
-                    when($service_type !== null, function ($query) use ($service_type) {
-                        $query->where('service.service_type', 'like', '%'.$service_type.'%');
+            $workshops = Workshop::withAndWhereHas('services', function ($subQuery) use ($service_type) {
+                        $subQuery->when($service_type !== null, function ($subQuery_2) use ($service_type) {
+                            $subQuery_2->where('service_type', 'like', '%'.$service_type.'%');
+                        });
                     })->
+                    where('city_district', 'like', '%'.$currentLocation['city_district'].'%')->
+                    where('neighbourhood', 'like', '%'.$currentLocation['neighbourhood'].'%')->
                     get();
 
         } catch (\Illuminate\Database\QueryException $e) {

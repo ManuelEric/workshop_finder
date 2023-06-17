@@ -103,7 +103,8 @@ class WorkshopController extends Controller
             'postcode' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
-            'opening_hours' => 'required'
+            'opening_hours' => 'required',
+            'gmaps' => 'nullable',
         ] + $extended_validate);
 
         if ($request->input('password')) {

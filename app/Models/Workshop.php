@@ -36,6 +36,7 @@ class Workshop extends Model implements AuthenticatableContract, AuthorizableCon
         'longitude',
         'opening_hours',
         'password',
+        'gmaps',
         'token',
     ];
 
