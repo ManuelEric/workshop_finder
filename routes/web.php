@@ -31,7 +31,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         $router->put('user/{user}/edit/profile', ['uses' => 'UserController@update']);
         $router->post('user/{user}/find/workshops', ['uses' => 'UserController@find']);
         // Booking
-        $router->get('book/history', ['uses' => 'BookingController@get']);
+        $router->get('book/history[/{old}]', ['uses' => 'BookingController@get']);
         $router->get('book/{booking}', ['uses' => 'BookingController@show']);
         $router->post('book/workshop/{workshop}', ['uses' => 'BookingController@booking']);
         $router->post('book/{booking}/payment/confirm', ['uses' => 'BookingController@upload']);

@@ -40,8 +40,12 @@ class BookingController extends Controller
             return $this->successResponse($message, []);
         }
 
+        $status = $request->route('old') != true ? [0,1,2] : [3,4];
+
+        $bookings = $user->bookings()->with(['workshop', 'workshop.services'])->whereIn('status', $status)->get();
+
         $message = "Booked history found.";
-        return $this->successResponse($message, $user->bookings);
+        return $this->successResponse($message, $bookings);
     }
 
     public function show(Request $request)
@@ -138,10 +142,11 @@ class BookingController extends Controller
         $uploadedProof = $request->file('proof');
         $paymentDetail['proof_of_payment'] = date('Ymd').'_'.$bookingCode.'_'.Str::random(10).".".$uploadedProof->extension();
 
-        // $uploadedProof->move(base_path('public/payment'), $paymentDetail['proof_of_payment']);
+        $uploadedProof->move(base_path('public/payment'), $paymentDetail['proof_of_payment']);
 
         try {
             $currentBooking->proof_of_payment = $paymentDetail['proof_of_payment'];
+            $currentBooking->status = 1;
             $currentBooking->save();
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Error trying to upload proof of payment, please try again.', 400);

@@ -26,7 +26,7 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validate($request, [
-            'service_type' => 'required',
+            'service_type' => 'required|in:oil,towing,tire',
             'service_price' => 'required|integer',
             'description' => 'required',
         ]);
