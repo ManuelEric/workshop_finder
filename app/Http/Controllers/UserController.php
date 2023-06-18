@@ -50,7 +50,7 @@ class UserController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        $user = User::where('email', $email)->first();
+        $user = User::with('vehicles')->where('email', $email)->first();
         if (!$user) {
             return $this->errorResponse('Login failed', 401);
         }
