@@ -140,6 +140,7 @@ class UserController extends Controller
 
 
         $service_type = $request->service_type ?? null;
+        $workshop_name = $request->workshop_name ?? null;
 
         $response = $this->getCurrentLocation($latitude, $longitude);
 
@@ -158,6 +159,9 @@ class UserController extends Controller
                         $subQuery->when($service_type !== null, function ($subQuery_2) use ($service_type) {
                             $subQuery_2->where('service_type', 'like', '%'.$service_type.'%');
                         });
+                    })->
+                    when($workshop_name !== null, function ($subQuery) use ($workshop_name) {
+                        $subQuery->where('name', 'like', '%'.$workshop_name.'%');
                     })->
                     where('city_district', 'like', '%'.$currentLocation['city_district'].'%')->
                     where('neighbourhood', 'like', '%'.$currentLocation['neighbourhood'].'%')->
