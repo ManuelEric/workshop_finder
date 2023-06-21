@@ -38,6 +38,7 @@ class Booking extends Model
         'price_in_total',
         'status',
         'proof_of_payment',
+        'queue_id',
     ];
 
     public function scopeWithAndWhereHas($query, $relation, $constraint){

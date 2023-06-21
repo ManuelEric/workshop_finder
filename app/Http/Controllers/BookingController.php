@@ -3,14 +3,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\RestfulTrait;
+use App\Jobs\CancelBooking;
 use App\Models\Booking;
 use App\Models\Services;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\User;
 use App\Models\Workshop;
 use App\Models\Vehicle;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Queue;
 
 class BookingController extends Controller
 {
@@ -114,10 +118,15 @@ class BookingController extends Controller
             return $this->errorResponse('Error trying to create booking, please try again.', 500);
 
         $booking = Booking::withAndWhereHas('workshop', function ($subQuery) use ($serviceId) {
-            $subQuery->withAndWhereHas('services', function ($subQuery_2) use ($serviceId) {
-                $subQuery_2->where('id', $serviceId);
-            });
-        })->where('booking_code', $booking->booking_code)->first();
+                $subQuery->withAndWhereHas('services', function ($subQuery_2) use ($serviceId) {
+                    $subQuery_2->where('id', $serviceId);
+                });
+            })->where('booking_code', $booking->booking_code)->first();
+
+        $queueId = Queue::later(Carbon::now()->addMinutes(20), new CancelBooking($booking));
+        
+        $booking->queue_id = $queueId;
+        $booking->save();
 
         $message = "Booking created successfully";
         return $this->successResponse($message, $booking);
@@ -148,6 +157,9 @@ class BookingController extends Controller
             $currentBooking->proof_of_payment = $paymentDetail['proof_of_payment'];
             $currentBooking->status = 1;
             $currentBooking->save();
+
+            DB::table('jobs')->where('id', $currentBooking->queue_id)->delete();
+
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Error trying to upload proof of payment, please try again.', 400);
         }
