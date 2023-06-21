@@ -46,7 +46,7 @@ class BookingController extends Controller
 
         $status = $request->route('old') != true ? [0,1,2] : [3,4];
 
-        $bookings = $user->bookings()->with(['workshop', 'workshop.services'])->whereIn('status', $status)->get();
+        $bookings = $user->bookings()->with(['workshop', 'workshop.services', 'user', 'user.vehicles'])->whereIn('status', $status)->get();
 
         $message = "Booked history found.";
         return $this->successResponse($message, $bookings);
@@ -62,7 +62,7 @@ class BookingController extends Controller
             return $this->successResponse($message, []);
         }
 
-        $show = Booking::with(['workshop', 'workshop.services'])->where('booking_code', $bookingCode)->first();
+        $show = Booking::with(['workshop', 'workshop.services', 'user', 'user.vehicles'])->where('booking_code', $bookingCode)->first();
         $message = "Booked history found.";
         return $this->successResponse($message, $show);
     }
@@ -121,7 +121,13 @@ class BookingController extends Controller
                 $subQuery->withAndWhereHas('services', function ($subQuery_2) use ($serviceId) {
                     $subQuery_2->where('id', $serviceId);
                 });
-            })->where('booking_code', $booking->booking_code)->first();
+            })->where('booking_code', $booking->booking_code)->
+            withAndWhereHas('user', function ($subQuery) use ($vehicleId) {
+                $subQuery->withAndWhereHas('vehicles', function ($subQuery_2) use ($vehicleId) {
+                    $subQuery_2->where('id', $vehicleId);
+                });
+            })->
+            first();
 
         $queueId = Queue::later(Carbon::now()->addMinutes(20), new CancelBooking($booking));
         
@@ -183,7 +189,7 @@ class BookingController extends Controller
         $user = User::where('token', $token)->firstOrFail();
         $bookingCode = $request->route('booking');
 
-        $booking = Booking::where('booking_code', $bookingCode)->firstOrFail();
+        $booking = Booking::with(['workshop', 'workshop.services', 'user', 'user.vehicles'])->where('booking_code', $bookingCode)->firstOrFail();
 
         if (!$booking->exists())
             return $this->errorResponse('The booking doesn\'t exist.', 400);
