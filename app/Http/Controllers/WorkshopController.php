@@ -66,9 +66,9 @@ class WorkshopController extends Controller
         try {
             
             if ($shop)
-                $shops = Workshop::findOrFail($shop);
+                $shops = Workshop::with(['services', 'services.orders'])->findOrFail($shop);
             else
-                $shops = Workshop::all();
+                $shops = Workshop::with(['services', 'services.orders'])->get();
 
         } catch (ModelNotFoundException $e) {
 
