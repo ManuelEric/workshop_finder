@@ -76,9 +76,9 @@ class UserController extends Controller
         try {
             
             if ($user)
-                $users = User::find($user);
+                $users = User::with('vehicles')->find($user);
             else
-                $users = User::all();
+                $users = User::with('vehicles')->get();
 
         } catch (Exception $e) {
 

@@ -37,6 +37,7 @@ class BookingController extends Controller
 
     public function get(Request $request)
     {
+        $response = [];
         $token = $request->header('token');
         $user = User::where('token', $token)->firstOrFail();
         if ($user->bookings()->count() == 0 ) {
@@ -47,7 +48,7 @@ class BookingController extends Controller
         $status = $request->route('old') != true ? [0,1,2] : [3,4];
         
         $index = 0;
-        foreach ($user->bookings as $booking) {
+        foreach ($user->bookings()->whereIn('status', $status)->get() as $booking) {
             $response[$index] = [
                 'booking_code' => $booking->booking_code,
                 'user_id' => $booking->user_id,
@@ -76,10 +77,7 @@ class BookingController extends Controller
             $index++;
         }
 
-
-        $bookings = $user->bookings()->with(['workshop', 'workshop.services', 'user', 'user.vehicles'])->whereIn('status', $status)->get();
-
-        $message = "Booked history found.";
+        $message = count($response) > 0 ? "Booked history found." : "There are no booking found.";
         return $this->successResponse($message, $response);
     }
 
