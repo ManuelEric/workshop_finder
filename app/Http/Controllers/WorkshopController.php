@@ -27,6 +27,8 @@ class WorkshopController extends Controller
         if (!$workshop = Workshop::create($validated))
             return $this->errorResponse("Error trying to create an account. Please try again.", 400);
 
+        $workshop['services'] = [];
+
         $message = 'Registration successful';
         return $this->successResponse($message, $workshop);
     }
@@ -41,7 +43,7 @@ class WorkshopController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        $workshop = Workshop::where('email', $email)->first();
+        $workshop = Workshop::with(['services', 'orders'])->where('email', $email)->first();
         if (!$workshop) {
             return $this->errorResponse('Login failed', 401);
         }

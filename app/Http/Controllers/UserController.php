@@ -29,6 +29,7 @@ class UserController extends Controller
         try {
 
             $user = User::create($validated);
+            $user['vehicles'] = [];
 
         } catch (Exception $e) {
 
@@ -50,7 +51,7 @@ class UserController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        $user = User::with('vehicles')->where('email', $email)->first();
+        $user = User::with(['vehicles', 'bookings'])->where('email', $email)->first();
         if (!$user) {
             return $this->errorResponse('Login failed', 401);
         }
