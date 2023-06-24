@@ -147,7 +147,6 @@ class WorkshopController extends Controller
                 
             }
 
-            return $shops;
 
         } catch (ModelNotFoundException $e) {
 
