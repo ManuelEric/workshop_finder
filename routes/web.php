@@ -68,6 +68,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
             $router->delete('shop/{shop}/remove/service/{service}', ['uses' => 'ServiceController@destroy']);
 
             $router->post('book/{booking}/confirm-payment', ['uses' => 'WorkshopController@confirmPayment']);
+            $router->get('book/history[/{old}]', ['uses' => 'BookingController@ws_get']);
+            $router->get('book/{booking}', ['uses' => 'BookingController@ws_show']);
 
             $router->post('logout', ['uses' => 'WorkshopController@logout']);
         });

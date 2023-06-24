@@ -243,4 +243,78 @@ class BookingController extends Controller
         return $this->successResponse($message, $booking);
         
     }
+
+    // workshop orders
+
+    public function ws_get(Request $request)
+    {
+        $response = [];
+        $token = $request->header('token');
+        $workshop = Workshop::where('token', $token)->firstOrFail();
+        if ($workshop->orders()->count() == 0 ) {
+            $message = "You haven't booked before.";
+            return $this->successResponse($message, []);
+        }
+
+        $status = $request->route('old') != true ? [0,1,2] : [3,4];
+        
+        $index = 0;
+        foreach ($workshop->orders()->whereIn('status', $status)->get() as $booking) {
+            $response[$index] = [
+                'booking_code' => $booking->booking_code,
+                'user_id' => $booking->user_id,
+                'workshop_id' => $booking->workshop_id,
+                'vehicle_id' => $booking->vehicle_id,
+                'workshop_service_id' => $booking->workshop_service_id,
+                'booking_date' => $booking->booking_date,
+                'pickup_location' => $booking->pickup_location,
+                'pickup_latitude' => $booking->pickup_latitude,
+                'pickup_longitude' => $booking->pickup_longitude,
+                'price_in_total' => $booking->price_in_total,
+                'status' => $booking->status,
+                'proof_of_payment' => $booking->proof_of_payment,
+                'queue_id' => $booking->queue_id,
+                'created_at' => $booking->created_at,
+                'updated_at' => $booking->updated_at,
+                'workshop' => $booking->workshop,
+                'user' => $booking->user
+            ];
+
+            $serviceId = $booking->workshop_service_id;
+            $vehicleId = $booking->vehicle_id;
+
+            $response[$index]['workshop']['services'] = $booking->workshop->services()->where('id', $serviceId)->get();
+            $response[$index]['user']['vehicles'] = $booking->user->vehicles()->where('id', $vehicleId)->get();
+            $index++;
+        }
+
+        $message = count($response) > 0 ? "Booked history found." : "There are no booking found.";
+        return $this->successResponse($message, $response);
+    }
+
+    public function ws_show(Request $request)
+    {
+        $bookingCode = $request->route('booking');
+        $token = $request->header('token');
+        $workshop = Workshop::where('token', $token)->firstOrFail();
+        if ($workshop->orders()->count() == 0 ) {
+            $message = "You haven't booked before.";
+            return $this->successResponse($message, []);
+        }
+
+        $booking = Booking::where('booking_code', $bookingCode)->first();
+        $serviceId = $booking->workshop_service_id;
+        $vehicleId = $booking->vehicle_id;
+
+        $show = Booking::withAndWhereHas('workshop.services', function ($subQuery) use ($serviceId) {
+            $subQuery->where('id', $serviceId);
+        })->
+        withAndWhereHas('user.vehicles', function ($subQuery) use ($vehicleId) {
+            $subQuery->where('id', $vehicleId);
+        })->
+        where('booking_code', $bookingCode)->first();
+        $message = "Booked history found.";
+        return $this->successResponse($message, $show);
+    }
+    // workshop orders end
 }
