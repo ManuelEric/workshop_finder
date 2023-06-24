@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\RestfulTrait;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\Workshop;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -44,7 +45,15 @@ class WorkshopController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        $workshop = Workshop::with(['services', 'orders', 'orders.user', 'orders.user.vehicles'])->where('email', $email)->first();
+        $workshop = Workshop::with(['services', 'orders', 'orders.user'])->where('email', $email)->first();
+        
+        foreach ($workshop->orders as $key => $value) {
+            $vehicleId = $value->vehicle_id;
+            $vehicle = Vehicle::find($vehicleId);
+
+            $workshop->orders[$key]['user']['vehicles'] = [$vehicle]; 
+        }
+
         if (!$workshop) {
             return $this->errorResponse('Login failed', 401);
         }
@@ -68,10 +77,32 @@ class WorkshopController extends Controller
     {
         try {
             
-            if ($shop)
-                $shops = Workshop::with(['services', 'services.orders', 'services.orders.user', 'services.orders.user.vehicles'])->findOrFail($shop);
-            else
-                $shops = Workshop::with(['services', 'services.orders', 'services.orders.user', 'services.orders.user.vehicles'])->get();
+            if ($shop) {
+
+                $shops = Workshop::with(['services', 'orders', 'orders.user'])->findOrFail($shop);
+
+                
+                foreach ($shops->orders as $key => $value) {
+                    $vehicleId = $value->vehicle_id;
+                    $vehicle = Vehicle::find($vehicleId);
+
+                    $shops->orders[$key]['user']['vehicles'] = [$vehicle]; 
+                }
+
+            } else {
+
+                $shops = Workshop::with(['services', 'orders', 'orders.user'])->get();
+
+                foreach ($shops as $shop) {
+                    
+                    foreach ($shop->orders as $key => $value) {
+                        $vehicleId = $value->vehicle_id;
+                        $vehicle = Vehicle::find($vehicleId);
+
+                        $shop->orders[$key]['user']['vehicles'] = [$vehicle]; 
+                    }
+                }
+            }
 
         } catch (ModelNotFoundException $e) {
 

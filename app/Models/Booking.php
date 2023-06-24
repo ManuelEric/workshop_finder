@@ -51,6 +51,11 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function vehicles()
+    {
+        return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id');
+    }
+
     public function workshop()
     {
         return $this->belongsTo(Workshop::class, 'workshop_id', 'id');

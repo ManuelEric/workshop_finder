@@ -31,7 +31,7 @@ class Vehicle extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function booking()
+    public function bookings()
     {
         return $this->hasMany(Booking::class, 'vehicle_id', 'id');
     }
