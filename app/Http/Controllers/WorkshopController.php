@@ -80,30 +80,68 @@ class WorkshopController extends Controller
             
             if ($shop) {
 
-                $shops = Workshop::with(['services', 'orders', 'orders.user'])->findOrFail($shop);
+                $shops = Workshop::with(['services', 'orders'])->findOrFail($shop);
+                $new_shops = $shops;
 
-                
-                foreach ($shops->orders as $key => $value) {
+                foreach ($new_shops->orders as $key => $value) {
+
+                    $userId = $value->user_id;
+                    $user = User::find($userId);
+                    $value['user'] = $user;
                     $vehicleId = $value->vehicle_id;
                     $vehicle = Vehicle::find($vehicleId);
 
-                    $shops->orders[$key]['user']['vehicles'] = [$vehicle]; 
+                    $value['user']['vehicles'] = [$vehicle]; 
                 }
 
             } else {
 
-                $shops = Workshop::with(['services', 'orders', 'orders.user'])->get();
-
-                foreach ($shops as $shop) {
+                $shops = Workshop::with(['services', 'orders'])->get();
+                $shops = $shops->map(function ($object) {
                     
-                    foreach ($shop->orders as $key => $value) {
+                    $workshop = [
+                        'id' => $object->id,
+                        'name' => $object->name,
+                        'email' => $object->email,
+                        'phone_number' => $object->phone_number,
+                        'address' => $object->address,
+                        "city" => $object->city,
+                        "city_district" => $object->city_district,
+                        "neighbourhood" => $object->neighbourhood,
+                        "suburb" => $object->suburb,
+                        "postcode" => $object->postcode,
+                        "latitude" => $object->latitude,
+                        "longitude" => $object->longitude,
+                        "opening_hours" => $object->opening_hours,
+                        "thumbnail" => $object->thumbnail,
+                        "webiste" => $object->webiste,
+                        "gmaps" => $object->gmaps,
+                        "token" => $object->token,
+                        "created_at" => $object->created_at,
+                        "updated_at" => $object->updated_at,
+                    ];
+
+                    $workshop['services'] = $object->services;
+                    $workshop['orders'] = $object->orders;
+                    
+                    foreach ($object->orders as $key => $value) {
+                        $userId = $value->user_id;
+                        $user = User::find($userId);
+
                         $vehicleId = $value->vehicle_id;
                         $vehicle = Vehicle::find($vehicleId);
 
-                        $shop->orders[$key]['user']['vehicles'] = [$vehicle]; 
+                        $workshop['orders'][$key]['user'] = $user;
+                        $workshop['orders'][$key]['user']['vehicles'] = $vehicle;
+                        
                     }
-                }
+
+                    return $workshop;
+                });
+                
             }
+
+            return $shops;
 
         } catch (ModelNotFoundException $e) {
 
