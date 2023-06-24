@@ -46,14 +46,7 @@ class WorkshopController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        $workshop = Workshop::with(['services', 'orders', 'orders.user'])->where('email', $email)->first();
-        
-        foreach ($workshop->orders as $key => $value) {
-            $vehicleId = $value->vehicle_id;
-            $vehicle = Vehicle::find($vehicleId);
-
-            $workshop->orders[$key]['user']['vehicles'] = [$vehicle]; 
-        }
+        $workshop = Workshop::with(['services', 'orders'])->where('email', $email)->first();
 
         if (!$workshop) {
             return $this->errorResponse('Login failed', 401);
@@ -69,8 +62,21 @@ class WorkshopController extends Controller
             'token' => $generateToken
         ]);
 
+        $new_shops = $workshop;
+
+        foreach ($new_shops->orders as $key => $value) {
+
+            $userId = $value->user_id;
+            $user = User::find($userId);
+            $value['user'] = $user;
+            $vehicleId = $value->vehicle_id;
+            $vehicle = Vehicle::find($vehicleId);
+
+            $value['user']['vehicles'] = [$vehicle]; 
+        }
+
         $message = 'Login successful';
-        return $this->successResponse($message, $workshop);
+        return $this->successResponse($message, $new_shops);
     }
 
     //
