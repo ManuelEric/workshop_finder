@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\RestfulTrait;
+use App\Models\User;
 use App\Models\Workshop;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -43,7 +44,7 @@ class WorkshopController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        $workshop = Workshop::with(['services', 'orders'])->where('email', $email)->first();
+        $workshop = Workshop::with(['services', 'orders', 'orders.user', 'orders.user.vehicles'])->where('email', $email)->first();
         if (!$workshop) {
             return $this->errorResponse('Login failed', 401);
         }
