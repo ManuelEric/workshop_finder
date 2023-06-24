@@ -183,4 +183,16 @@ class UserController extends Controller
 
         return $this->successResponse($message, $workshops);
     }
+
+    public function logout(Request $request)
+    {
+        $token = $request->header('token');
+        $user = User::where('token', $token)->firstOrFail();
+
+        $user->token = null;
+        $user->save();
+
+        $message = 'Successfully logged out';
+        return $this->successResponse($message, []);
+    }
 }

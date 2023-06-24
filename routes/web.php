@@ -46,6 +46,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         $router->post('user/{user}/add/vehicle', ['uses' => 'VehicleController@store']);
         $router->put('user/{user}/edit/vehicle/{vehicle}', ['uses' => 'VehicleController@update']);
         $router->delete('user/{user}/remove/vehicle/{vehicle}', ['uses' => 'VehicleController@destroy']);
+
+        $router->post('logout', ['uses' => 'UserController@logout']);
     });
 
     $router->group(['prefix' => 'ws'], function () use ($router) {
@@ -64,6 +66,10 @@ $router->group(['prefix' => 'api'], function () use ($router) {
             $router->post('shop/{shop}/add/service', ['uses' => 'ServiceController@store']);
             $router->put('shop/{shop}/edit/service/{service}', ['uses' => 'ServiceController@update']);
             $router->delete('shop/{shop}/remove/service/{service}', ['uses' => 'ServiceController@destroy']);
+
+            $router->post('book/{booking}/confirm-payment', ['uses' => 'WorkshopController@confirmPayment']);
+
+            $router->post('logout', ['uses' => 'WorkshopController@logout']);
         });
     });
 

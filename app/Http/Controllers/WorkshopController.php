@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\RestfulTrait;
+use App\Models\Booking;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\Workshop;
@@ -154,5 +155,36 @@ class WorkshopController extends Controller
 
         $message = 'Profile updated';
         return $this->successResponse($message, $workshop);
+    }
+
+    public function confirmPayment(Request $request)
+    {
+        $token = $request->header('token');
+        $workshopId = Workshop::where('token', $token)->firstOrFail()->id;
+
+        $bookingCode = $request->booking;
+        $booking = Booking::where('booking_code', $bookingCode)->where('workshop_id', $workshopId)->where('status', 1)->firstOrFail();
+
+        $booking->status = 2;
+        $booking->save();
+
+        $booking['user']['vehicles'] = [$booking->vehicles];
+        unset($booking['vehicles']);
+
+        $message = 'Payment confirmed';
+        return $this->successResponse($message, $booking);
+        
+    }
+
+    public function logout(Request $request)
+    {
+        $token = $request->header('token');
+        $workshop = Workshop::where('token', $token)->firstOrFail();
+
+        $workshop->token = null;
+        $workshop->save();
+
+        $message = 'Successfully logged out';
+        return $this->successResponse($message, []);
     }
 }
